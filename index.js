@@ -73,38 +73,6 @@ var error_text;
 var APP_ID = undefined; //replace with 'amzn1.echo-sdk-ams.app.[your-unique-value-here]'; NOTE THIS IS A COMPLETELY OPTIONAL STEP WHICH MAY CAUSE MORE ISSUES THAN IT SOLVES IF YOU DON'T KNOW WHAT YOU ARE DOING
 
 
-// check whether the S3 bucket exisits
-
-if (S3_BUCKET){
-    
-    var bucket_params = {
-      Bucket: S3_BUCKET
-     };
-     s3.headBucket(bucket_params, function(err, data) {
-       if (err) {
-           console.log ('S3 Bucket does not exist - lets try and create it')
-           s3.createBucket(bucket_params, function(err, data) {
-               if (err) {
-                   console.log('Could not create bucket', err.stack);
-                   error_text = 'The S3 Bucket could not be created - make sure you have set up the IAM role properly or alternatively try a different random bucket name'
-               }
-               
-               else     {
-                   console.log('Bucket Created');
-               }
-               
-         });
-           
-       }
-       else {
-           console.log('Bucket already exists');
-
-       }
-     });
-  
-}
-
-
 var handlers = {
     
     'LaunchRequest': function () {

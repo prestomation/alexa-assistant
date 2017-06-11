@@ -1,0 +1,79 @@
+
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  ClientId:
+    Type: String
+    Description: Your Google OAuth ClientId
+    Default: Default
+  ClientSecret:
+    Type: String
+    Description: Your Google OAuth ClientSecret
+    Default: Default
+  RedirectURL:
+    Type: String
+    Description: Your Alexa Skill Account Linking Redirect URL
+    Default: Default
+Resources:
+  SkillLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      Timeout: 5
+      MemorySize: 512
+      Role: 
+          Fn::GetAtt: 
+          - "LambdaRole"
+          - "Arn"
+      Environment:
+        Variables: 
+          S3_BUCKET : !Ref SpeechStorage
+          API_ENDPOINT: "embeddedassistant.googleapis.com"
+          CLIENT_ID: !Ref ClientId
+          CLIENT_SECRET: !Ref ClientSecret
+          REDIRECT_URL: !Ref RedirectURL
+      Events:
+       AlexaSkillEvent:
+         Type: AlexaSkill
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties: 
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonPollyReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "lambda.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole" 
+      Policies: 
+        - 
+          PolicyName: "GoogleAssistantPolicy"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: "Allow"
+                Action: "*"
+                Resource: !Join [ "", [ !GetAtt SpeechStorage.Arn, "*" ]] 
+  SpeechStorage:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+       LifecycleConfiguration:
+         Rules:
+           -
+             ExpirationInDays: 1
+             Status: "Enabled"
+Outputs:
+  LambdaSkillARN:
+    Description: ARN of the Lambda. Put this in your Alexa Skill Configuration
+    Value: !GetAtt SkillLambda.Arn
+  
+                 
